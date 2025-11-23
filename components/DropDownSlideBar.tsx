@@ -29,9 +29,17 @@ export function DropDownSlideBar() {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         side="top"
-        align="start"
-        style={{ width: "var(--radix-dropdown-menu-trigger-width)" }}
-        className="min-w-(--radix-dropdown-menu-trigger-width)"
+        align="end"
+        className="
+                w-48
+                rounded-xl
+                border border-gray-200
+                bg-white
+                shadow-md
+                outline-none
+                focus-visible:outline-none
+                focus-visible:ring-0
+            "
       >
         <DropdownMenuItem className="w-full cursor-pointer">
           <span>Account</span>
