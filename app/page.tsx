@@ -1,17 +1,34 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { diffWords } from "diff";
 import { ContextArea } from "@/components/ContextArea";
 import { Button } from "@/components/ui/button";
 import Footer from "@/components/Footer";
+import { Spinner } from "@/components/ui/spinner";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const SAMPLE =
   "This unit is an introductory computer science unit, providing a practical introduction to basic computing and programming concepts. Students gain an understanding of, and practical experience in, computer programming; practical experience in implementing informal prose descriptions of problem solutions using an high-level language; an understanding of, and practical experience in, designing, coding, testing and debugging simple algorithms; and an understanding of the principle of incremental development. Other topics include the concept of program correctness; the differences between high-level languages, assembly languages and machine languages; the role played by compilers; and the execution of programs by computer hardware.";
 
 export default function Home() {
+  const router = useRouter();
   const [userText, setUserText] = useState("");
   const [showDiff, setShowDiff] = useState(false);
+  const [userSubmitted, setUserSubmitted] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const diffParts = useMemo(() => diffWords(SAMPLE, userText), [userText]);
 
@@ -133,9 +150,57 @@ export default function Home() {
       {/* Button Section */}
       <div className="max-w-7xl mx-auto mt-10">
         <div className="flex justify-center gap-6 flex-wrap">
-          <Button className="px-10 py-6 text-base font-semibold rounded-lg border-2 border-gray-300 bg-white text-gray-800 hover:bg-bright-red hover:text-white hover:border-bright-red hover:shadow-lg active:scale-95 transition-all duration-200">
-            Submit
-          </Button>
+          <AlertDialog
+            open={isDialogOpen}
+            onOpenChange={(open) => {
+              // Prevent closing if submission is in progress
+              if (!open && userSubmitted) return;
+              setIsDialogOpen(open);
+            }}
+          >
+            <AlertDialogTrigger asChild>
+              <Button className="px-10 py-6 text-base font-semibold rounded-lg border-2 border-gray-300 bg-white text-gray-800 hover:bg-bright-red hover:text-white hover:border-bright-red hover:shadow-lg active:scale-95 transition-all duration-200">
+                Submit
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Are you sure you want to submit?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  You will not be able to change your answer after submitting.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={userSubmitted}>
+                  Cancel
+                </AlertDialogCancel>
+                <Button
+                  className="text-base font-semibold rounded-lg border-2 border-gray-300 bg-bright-red text-white hover:bg-bright-red hover:text-white hover:border-bright-red hover:shadow-lg active:scale-95 transition-all duration-200"
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (userSubmitted) return;
+                    setUserSubmitted(true);
+                    // Wait for 2 seconds before navigating (dialog stays open during this time)
+                    await new Promise((resolve) => setTimeout(resolve, 2000));
+                    router.push("/chatbot");
+                  }}
+                  disabled={userSubmitted}
+                >
+                  {userSubmitted ? (
+                    <>
+                      <Spinner className="w-4 h-4" />
+                      <span className="ml-2">Please wait</span>
+                    </>
+                  ) : (
+                    "Submit"
+                  )}
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           <Button
             onClick={() => {
@@ -147,7 +212,7 @@ export default function Home() {
             Reset
           </Button>
 
-          {/* 👇 Use this button to show the diff */}
+          {/* Show Diff Button */}
           <Button
             onClick={() => setShowDiff(true)}
             className="px-10 py-6 text-base font-semibold rounded-lg border-2 border-gray-300 bg-white text-gray-800 hover:bg-purple hover:text-white hover:border-purple hover:shadow-lg active:scale-95 transition-all duration-200"
