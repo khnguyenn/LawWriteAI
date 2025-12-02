@@ -109,7 +109,7 @@ export function LoginForm() {
           <Field>
             <Button
               type="submit"
-              className="bg-deep-red"
+              className="bg-mq-red hover:bg-mq-red/90 cursor-pointer"
               onClick={handleSubmit}
               disabled={isLoading}
             >

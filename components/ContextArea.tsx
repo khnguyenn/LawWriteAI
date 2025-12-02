@@ -55,16 +55,24 @@ export function ContextArea({
       </div>
 
       <div className="mt-5 pt-4 border-t border-gray-100">
-        <div className="bg-gradient-to-r from-red-50 to-red-100 px-4 py-3 rounded-lg border border-red-200 shadow-sm">
-          <p className="font-semibold text-gray-800 flex items-center gap-2.5">
-            <WholeWord className="w-5 h-5 text-red-600 shrink-0" />
-            <span className="text-sm">
-              Word Count:{" "}
-              <span className="text-red-600 font-bold text-base">
-                {wordCount}
-              </span>
-            </span>
-          </p>
+        <div
+          className="
+      flex items-center justify-between
+      rounded-2xl 
+      px-5 py-4
+      border border-red-100 
+      bg-[#FFF5F5]      /* SOFT pastel red */
+      shadow-sm
+    "
+        >
+          {/* Label + Icon */}
+          <div className="flex items-center gap-2">
+            <WholeWord className="w-5 h-5 text-mq-red" />
+            <span className="text-sm font-medium text-mq-red">Word Count</span>
+          </div>
+
+          {/* Value */}
+          <span className="text-md font-bold text-red-700">{wordCount}</span>
         </div>
       </div>
     </div>

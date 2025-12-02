@@ -27,10 +27,8 @@ export function SignUpForm() {
     studentEmail: "",
     studentPassword: "",
     studentConfirmPassword: "",
-    termsAccepted: false,
   });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -67,9 +65,6 @@ export function SignUpForm() {
     }
     if (formData.studentPassword !== formData.studentConfirmPassword) {
       return fail("Student password and confirm password do not match");
-    }
-    if (!formData.termsAccepted) {
-      return fail("You must accept the terms and conditions");
     }
     return true;
   };
@@ -208,31 +203,9 @@ export function SignUpForm() {
           </Field>
 
           <Field>
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="terms-2"
-                className="data-[state=checked]:bg-deep-red data-[state=checked]:border-deep-red"
-                checked={formData.termsAccepted}
-                onCheckedChange={(checked) =>
-                  setFormData({
-                    ...formData,
-                    termsAccepted: Boolean(checked),
-                  })
-                }
-              />
-              <div className="grid gap-2">
-                <Label htmlFor="terms-2">Accept terms and conditions</Label>
-                <p className="text-muted-foreground text-sm">
-                  By clicking this checkbox, you agree to the terms and
-                  conditions.
-                </p>
-              </div>
-            </div>
-          </Field>
-          <Field>
             <Button
               type="submit"
-              className="bg-deep-red"
+              className="bg-mq-red hover:bg-mq-red/90 cursor-pointer"
               onClick={handleSubmit}
               disabled={isLoading}
             >

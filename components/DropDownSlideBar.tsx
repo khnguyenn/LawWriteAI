@@ -75,8 +75,8 @@ export function DropDownSlideBar() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="ghost"
-          className="w-full justify-start h-auto p-3 hover:bg-gray-50"
+          variant="default"
+          className="w-full justify-start h-auto p-3 bg-gray-50 hover:bg-gray-100 cursor-pointer"
         >
           <User2 className="w-5 h-5 shrink-0" />
           <div className="flex flex-col items-start flex-1 min-w-0 ml-3">
@@ -104,11 +104,20 @@ export function DropDownSlideBar() {
                 focus-visible:ring-0
             "
       >
-        <DropdownMenuItem className="w-full cursor-pointer">
+        <DropdownMenuItem className="w-full cursor-pointer rounded-xl hover:bg-gray-100 focus:bg-gray-100 focus:text-gray-900">
           <span className="text-bold">Account</span>
         </DropdownMenuItem>
         <DropdownMenuItem
-          className="w-full cursor-pointer"
+          className="w-full cursor-pointer rounded-xl hover:bg-gray-100 focus:bg-gray-100 focus:text-gray-900"
+          onSelect={(event) => {
+            event.preventDefault();
+            router.push("/");
+          }}
+        >
+          Home Page
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="w-full cursor-pointer rounded-xl hover:bg-gray-100 focus:bg-gray-100 focus:text-gray-900"
           onSelect={(event) => {
             event.preventDefault();
             handleSignOut();

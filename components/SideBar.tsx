@@ -7,13 +7,15 @@ import {
   Settings,
   Users,
   HelpCircle,
+  Scale,
 } from "lucide-react";
 import { DropDownSlideBar } from "./DropDownSlideBar";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { supabase } from "@/utils/supabase";
 import { useState, useEffect } from "react";
-
+import Logo from "@/assets/logo2.png";
+import Image from "next/image";
 type Profile = {
   studentName: string | null;
   studentMacID: number | null;
@@ -58,7 +60,7 @@ export function Sidebar() {
   }, []);
 
   const navItems = [
-    { icon: Home, label: "Home", href: "/home  " },
+    { icon: Scale, label: "Scenario", href: "/home" },
     {
       icon: MessagesSquare,
       label: "AI ChatBot",
@@ -70,8 +72,9 @@ export function Sidebar() {
 
   return (
     <div className="w-72 bg-white border-r border-gray-200 flex flex-col h-screen fixed left-0 top-0">
-      <div className="px-4 py-4 border-b border-gray-200">
-        <h1 className="text-red-700 text-2xl font-bold">Law Write AI</h1>
+      <div className="px-4 py-4 border-b border-gray-200 flex items-center">
+        <Image src={Logo} alt="Logo" width={90} height={90} />
+        <h1 className="text-mq-red text-2xl font-bold">LawWriteAI</h1>
       </div>
 
       <nav className="flex-1 p-4 overflow-y-auto">
@@ -82,10 +85,10 @@ export function Sidebar() {
               <li key={item.label}>
                 <Link href={item.href}>
                   <button
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-300 ease-in-out font-bold ${
                       isActive
-                        ? "bg-red-50 text-red-600 font-medium"
-                        : "text-gray-700 hover:bg-gray-50"
+                        ? "bg-mq-red text-white"
+                        : "text-gray-700 hover:bg-gray-50 cursor-pointer"
                     }`}
                   >
                     <item.icon className="w-5 h-5 shrink-0" />

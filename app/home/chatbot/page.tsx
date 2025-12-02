@@ -46,7 +46,7 @@ export default function ChatbotPage() {
   return (
     <div className="flex flex-col items-center text-center mt-20">
       <h1 className="text-3xl font-semibold text-red-700 mb-2">
-        Welcome to Law Write AI !!!
+        Welcome to LawWriteAI
       </h1>
       <p className="text-gray-500 text-md">
         This is a AI Chabot can generate questions based on the context of the
@@ -85,7 +85,7 @@ export default function ChatbotPage() {
           </p>
 
           <Button
-            className="mt-6 bg-deep-red text-white hover:bg-deep-red/95 active:scale-95 transition-all duration-200"
+            className="mt-6 bg-mq-red text-white hover:bg-mq-red/95 active:scale-95 transition-all duration-200"
             onClick={() => {
               setLoading(true);
               setTimeout(() => {
@@ -107,14 +107,14 @@ export default function ChatbotPage() {
         </div>
       )}
 
-      <div className="mt-6 w-1/2 mx-auto p-2 bg-gradient-to-r from-blue-50 to-blue-50 dark:from-blue-950/20 dark:to-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+      <div className="mt-6 w-1/2 mx-auto p-2 bg-blue-50 0 rounded-lg border border-blue-200">
         <div className="flex items-start gap-3">
-          <Info className="h-8 w-8 text-blue-600 mt-1 flex-shrink-0" />
+          <Info className="h-8 w-8 text-blue-600 flex shrink-0" />
           <div>
-            <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2 text-left">
+            <h4 className="font-semibold text-blue-800 mb-1 text-left">
               Important Note
             </h4>
-            <p className="text-sm text-blue-700 dark:text-blue-300">
+            <p className="text-sm text-blue-700">
               Please set up your Zoom and ready to record.
             </p>
           </div>

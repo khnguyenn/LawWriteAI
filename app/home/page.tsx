@@ -21,6 +21,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { FileText, Redo2, RotateCcw, Send } from "lucide-react";
 
 const SAMPLE =
   "This unit is an introductory computer science unit, providing a practical introduction to basic computing and programming concepts. Students gain an understanding of, and practical experience in, computer programming; practical experience in implementing informal prose descriptions of problem solutions using an high-level language; an understanding of, and practical experience in, designing, coding, testing and debugging simple algorithms; and an understanding of the principle of incremental development. Other topics include the concept of program correctness; the differences between high-level languages, assembly languages and machine languages; the role played by compilers; and the execution of programs by computer hardware.";
@@ -170,8 +171,9 @@ export default function Home() {
             }}
           >
             <AlertDialogTrigger asChild>
-              <Button className="px-10 py-6 text-base font-semibold rounded-lg border-2 border-gray-300 bg-white text-gray-800 hover:bg-bright-red hover:text-white hover:border-bright-red hover:shadow-lg active:scale-95 transition-all duration-200">
-                Submit
+              <Button className="flex h-14 min-w-[190px] items-center gap-4 px-8 rounded-2xl border border-gray-200 bg-white text-gray-900 text-lg font-semibold shadow-sm hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 ease-in-out cursor-pointer">
+                <Send className="w-7 h-7 text-red-500" />
+                <span className="text-lg">Submit</span>
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -184,11 +186,14 @@ export default function Home() {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel disabled={userSubmitted}>
+                <AlertDialogCancel
+                  disabled={userSubmitted}
+                  className="bg-white text-gray-800 hover:bg-white hover:text-gray-800 hover:border-gray-300"
+                >
                   Cancel
                 </AlertDialogCancel>
                 <Button
-                  className="text-base font-semibold rounded-lg border-2 border-gray-300 bg-bright-red text-white hover:bg-bright-red hover:text-white hover:border-bright-red hover:shadow-lg active:scale-95 transition-all duration-200"
+                  className="text-base font-semibold rounded-lg border-2 bg-bright-red text-white active:scale-95 transition-all duration-200"
                   onClick={async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -218,21 +223,24 @@ export default function Home() {
               setUserText("");
               setShowDiff(false); // hide diff on reset
             }}
-            className="px-10 py-6 text-base font-semibold rounded-lg border-2 border-gray-300 bg-white text-gray-800 hover:bg-charcoal hover:text-white hover:border-charcoal hover:shadow-lg active:scale-95 transition-all duration-200"
+            className="flex h-14 min-w-[190px] items-center gap-4 px-8 rounded-2xl border border-gray-200 bg-white text-gray-900 text-lg font-semibold shadow-sm hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 ease-in-out cursor-pointer"
           >
-            Reset
+            <RotateCcw className="w-7 h-7 text-blue-500" />
+            <span className="text-lg">Reset</span>
           </Button>
 
           {/* Show Diff Button */}
           <Button
             onClick={() => setShowDiff(true)}
-            className="px-10 py-6 text-base font-semibold rounded-lg border-2 border-gray-300 bg-white text-gray-800 hover:bg-purple hover:text-white hover:border-purple hover:shadow-lg active:scale-95 transition-all duration-200"
+            className="flex h-14 min-w-[190px] items-center gap-4 px-8 rounded-2xl border border-gray-200 bg-white text-gray-900 text-lg font-semibold shadow-sm hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 ease-in-out cursor-pointer"
           >
-            Log (Show Diff)
+            <FileText className="w-7 h-7 text-indigo-500" />
+            <span className="text-lg">View Changes</span>
           </Button>
 
-          <Button className="px-10 py-6 text-base font-semibold rounded-lg border-2 border-gray-300 bg-white text-gray-800 hover:bg-deep-red hover:text-white hover:border-deep-red hover:shadow-lg active:scale-95 transition-all duration-200">
-            Redo
+          <Button className="flex h-14 min-w-[190px] items-center gap-4 px-8 rounded-2xl border border-gray-200 bg-white text-gray-900 text-lg font-semibold shadow-sm hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 ease-in-out cursor-pointer">
+            <Redo2 className="w-7 h-7 text-amber-500" />
+            <span className="text-lg">Redo</span>
           </Button>
         </div>
       </div>
