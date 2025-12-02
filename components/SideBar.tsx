@@ -11,19 +11,61 @@ import {
 import { DropDownSlideBar } from "./DropDownSlideBar";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { supabase } from "@/utils/supabase";
+import { useState, useEffect } from "react";
+
+type Profile = {
+  studentName: string | null;
+  studentMacID: number | null;
+};
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadProfile() {
+      // Get currently logged-in user
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        setLoading(false);
+        return;
+      }
+
+      // Get profile for this user
+      const { data, error } = await supabase
+        .from("student")
+        .select("studentName, studentMacID")
+        .eq("id", user.id) // same as auth.users.id
+        .single();
+
+      if (!error && data) {
+        setProfile({
+          studentName: data.studentName,
+          studentMacID: data.studentMacID,
+        });
+      }
+
+      setLoading(false);
+    }
+
+    loadProfile();
+  }, []);
 
   const navItems = [
-    { icon: Home, label: "Home", href: "/" },
+    { icon: Home, label: "Home", href: "/home  " },
     {
       icon: MessagesSquare,
       label: "AI ChatBot",
-      href: "/chatbot",
+      href: "/home/chatbot",
     },
-    { icon: HelpCircle, label: "Help", href: "/help" },
-    { icon: Users, label: "About", href: "/about" },
+    { icon: HelpCircle, label: "Help", href: "/home/help" },
+    { icon: Users, label: "About", href: "/home/about" },
   ];
 
   return (

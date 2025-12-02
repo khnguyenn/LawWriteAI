@@ -196,7 +196,7 @@ export default function Home() {
                     setUserSubmitted(true);
                     // Wait for 2 seconds before navigating (dialog stays open during this time)
                     await new Promise((resolve) => setTimeout(resolve, 2000));
-                    router.push("/chatbot");
+                    router.push("/home/chatbot");
                   }}
                   disabled={userSubmitted}
                 >

@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, WholeWord } from "lucide-react";
+import { AlertCircle, WholeWord, FilePen } from "lucide-react";
 import { useMemo } from "react";
 
 interface ContextAreaProps {
@@ -28,8 +28,8 @@ export function ContextArea({
   return (
     <div className="bg-white rounded-lg border-2 border-gray-200 p-6 shadow-sm h-full flex flex-col">
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center">
-          <AlertCircle className="w-3 h-3 text-gray-800 shrink-0" />
+        <div className="w-3 h-3 bg-red-600 rounded-full flex items-center justify-center">
+          <FilePen className="w-6 h-6 text-gray-800 shrink-0" />
         </div>
         <h3 className="text-gray-900 text-xl font-bold">
           {title || (mode === "sample" ? "Sample Text" : "Your Text")}
