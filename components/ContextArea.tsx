@@ -1,7 +1,8 @@
 "use client";
 
-import { AlertCircle, WholeWord, FilePen } from "lucide-react";
+import { WholeWord, FilePen } from "lucide-react";
 import { useMemo } from "react";
+import { toast } from "sonner";
 
 interface ContextAreaProps {
   mode: "sample" | "typing";
@@ -50,6 +51,27 @@ export function ContextArea({
             onChange={(e) => onChange?.(e.target.value)}
             placeholder="Type your text here..."
             className="w-full h-full bg-transparent text-gray-800 leading-relaxed resize-none outline-none placeholder:text-gray-400"
+            // Force manual typing by blocking clipboard interactions
+            onPaste={(e) => {
+              e.preventDefault();
+              toast.info("Manual typing only. Copy & paste is disabled here.");
+            }}
+            onCopy={(e) => {
+              e.preventDefault();
+              toast.info("Manual typing only. Copy & paste is disabled here.");
+            }}
+            onCut={(e) => {
+              e.preventDefault();
+              toast.info("Manual typing only. Copy & paste is disabled here.");
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              toast.info("Manual typing only. Copy & paste is disabled here.");
+            }}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              toast.info("Manual typing only. Clipboard actions are disabled.");
+            }}
           />
         )}
       </div>

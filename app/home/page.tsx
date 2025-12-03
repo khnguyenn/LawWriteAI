@@ -9,7 +9,7 @@ import Footer from "@/components/Footer";
 import { Spinner } from "@/components/ui/spinner";
 import Image from "next/image";
 import logoImage from "@/assets/image.png";
-
+import { SAMPLE_TEXT } from "@/lib/sample-text";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,8 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { FileText, Redo2, RotateCcw, Send } from "lucide-react";
 
-const SAMPLE =
-  "This unit is an introductory computer science unit, providing a practical introduction to basic computing and programming concepts. Students gain an understanding of, and practical experience in, computer programming; practical experience in implementing informal prose descriptions of problem solutions using an high-level language; an understanding of, and practical experience in, designing, coding, testing and debugging simple algorithms; and an understanding of the principle of incremental development. Other topics include the concept of program correctness; the differences between high-level languages, assembly languages and machine languages; the role played by compilers; and the execution of programs by computer hardware.";
+const SAMPLE = SAMPLE_TEXT;
 
 export default function Home() {
   const router = useRouter();
@@ -105,12 +104,7 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-2 gap-8">
-          <ContextArea
-            mode="sample"
-            title="Sample Text"
-            sampleText={SAMPLE}
-            disableSelection
-          />
+          <ContextArea mode="sample" title="Sample Text" sampleText={SAMPLE} />
           <ContextArea
             mode="typing"
             title="Your Text"
