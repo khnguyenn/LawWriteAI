@@ -3,16 +3,13 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { diffWords } from "diff";
-import { ContextArea } from "@/components/ContextArea";
 import { Button } from "@/components/ui/button";
-import Footer from "@/components/Footer";
 import { Spinner } from "@/components/ui/spinner";
 import Image from "next/image";
 import logoImage from "@/assets/image.png";
-import { SAMPLE_TEXT } from "@/lib/sample-text";
+import { SAMPLE_TEXT, SAMPLE_HTML } from "@/lib/sample-text";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -21,17 +18,19 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { FileText, Redo2, RotateCcw, Send } from "lucide-react";
+import { FileText, Redo2, RotateCcw, Save, Send } from "lucide-react";
+import RichTextEditor from "@/components/rich-text-editor";
 
 const SAMPLE = SAMPLE_TEXT;
 
 export default function Home() {
   const router = useRouter();
-  const [userText, setUserText] = useState("");
+  const [userText, setUserText] = useState(""); // plain text for diff
   const [showDiff, setShowDiff] = useState(false);
   const [userSubmitted, setUserSubmitted] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // Compare plain text (not HTML)
   const diffParts = useMemo(() => diffWords(SAMPLE, userText), [userText]);
 
   const leftSegments = useMemo(
@@ -86,6 +85,10 @@ export default function Home() {
     [diffParts]
   );
 
+  const handleSave = () => {
+    console.log("Saving...");
+  };
+
   return (
     <div className="bg-white min-h-screen p-8">
       {/* Context Area Section */}
@@ -103,13 +106,19 @@ export default function Home() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-8">
-          <ContextArea mode="sample" title="Sample Text" sampleText={SAMPLE} />
-          <ContextArea
-            mode="typing"
-            title="Your Text"
-            value={userText}
-            onChange={setUserText}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <RichTextEditor
+            title="Sample Letter"
+            content={SAMPLE_HTML}
+            editable={false}
+            showWordCount={true}
+          />
+          <RichTextEditor
+            title="Your Letter"
+            onTextChange={setUserText}
+            editable={true}
+            disablePaste={true}
+            showWordCount={true}
           />
         </div>
       </div>
@@ -230,6 +239,14 @@ export default function Home() {
           >
             <FileText className="w-7 h-7 text-indigo-500" />
             <span className="text-lg">View Changes</span>
+          </Button>
+
+          <Button
+            onClick={handleSave}
+            className="flex h-14 min-w-[190px] items-center gap-4 px-8 rounded-2xl border border-gray-200 bg-white text-gray-900 text-lg font-semibold shadow-sm hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 ease-in-out cursor-pointer"
+          >
+            <Save className="w-7 h-7 text-blue-500" />
+            <span className="text-lg">Save</span>
           </Button>
 
           <Button className="flex h-14 min-w-[190px] items-center gap-4 px-8 rounded-2xl border border-gray-200 bg-white text-gray-900 text-lg font-semibold shadow-sm hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 ease-in-out cursor-pointer">

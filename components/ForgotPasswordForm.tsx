@@ -20,11 +20,11 @@ import { Spinner } from "./ui/spinner";
 import { supabase } from "@/utils/supabase";
 import { toast } from "sonner";
 
-export function LoginForm() {
+export function ForgotPasswordForm() {
   const [studentId, setStudentId] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -69,9 +69,9 @@ export function LoginForm() {
       <form onSubmit={(e) => e.preventDefault()}>
         <FieldGroup>
           <div className="flex flex-col items-center gap-1 text-center">
-            <h1 className="text-2xl font-bold">Sign In</h1>
+            <h1 className="text-2xl font-bold">Forgot Password</h1>
             <p className="text-muted-foreground text-sm text-balance">
-              Fill in the form below to sign in to your account
+              Fill in the form below to reset your password
             </p>
           </div>
           <Field>
@@ -85,37 +85,27 @@ export function LoginForm() {
               placeholder="Enter your Macquarie University ID."
             />
           </Field>
-          <div className="relative">
-            <Field>
-              <FieldLabel htmlFor="password">Password</FieldLabel>
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                required
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </Field>
-            <button
-              type="button"
-              className="absolute right-2 top-0 translate-y-4 h-full hover:bg-transparent"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? (
-                <Eye className="w-4 h-4" />
-              ) : (
-                <EyeOff className="w-4 h-4" />
-              )}
-            </button>
-          </div>
           <Field>
-            <FieldDescription className="px-6 text-center">
-              Forgot your password?{" "}
-              <Link href="/forgot-password" className="text-deep-red">
-                Reset password
-              </Link>
-            </FieldDescription>
+            <FieldLabel htmlFor="password">Password</FieldLabel>
+            <Input
+              id="password"
+              type="password"
+              required
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
+            <Input
+              id="confirmPassword"
+              type="password"
+              required
+              placeholder="Confirm your new password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
           </Field>
 
           <Field>
@@ -125,13 +115,13 @@ export function LoginForm() {
               onClick={handleSubmit}
               disabled={isLoading}
             >
-              {isLoading ? <Spinner /> : "Sign In"}
+              {isLoading ? <Spinner /> : "Reset Password"}
             </Button>
           </Field>
           <FieldSeparator></FieldSeparator>
           <Field>
             <FieldDescription className="px-6 text-center">
-              Don't have an account? <Link href="/signup">Sign up</Link>
+              Don't have an account? <Link href="/signup">Back</Link>
             </FieldDescription>
           </Field>
         </FieldGroup>

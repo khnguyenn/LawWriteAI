@@ -8,6 +8,7 @@ import {
   Users,
   HelpCircle,
   Scale,
+  Save,
 } from "lucide-react";
 import { DropDownSlideBar } from "./DropDownSlideBar";
 import Link from "next/link";
@@ -68,6 +69,7 @@ export function Sidebar() {
     },
     { icon: HelpCircle, label: "Help", href: "/home/help" },
     { icon: Users, label: "About", href: "/home/about" },
+    { icon: Save, label: "Log", href: "/home/log" },
   ];
 
   return (

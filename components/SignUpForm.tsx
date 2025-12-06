@@ -48,9 +48,6 @@ export function SignUpForm() {
       return false;
     };
 
-    if (formData.studentMacId.length !== 8) {
-      return fail("Student Macquarie University ID must be 8 characters long");
-    }
     if (!formData.studentFullName.length) {
       return fail("Student full name is required");
     }
@@ -98,26 +95,24 @@ export function SignUpForm() {
       return;
     }
 
-    // Create pro5 for user
+    // Create profile for user
     const { error: profileError } = await supabase.from("student").insert({
       id: user.id, // same as auth.users.id
-      studentMacID: Number(formData.studentMacId),
+      studentMacID: formData.studentMacId,
+      studentEmail: formData.studentEmail,
       studentName: formData.studentFullName,
     });
 
-    setIsLoading(false);
-
     if (profileError) {
+      // Rollback: sign out and indicate failure (user needs to try again)
+      await supabase.auth.signOut();
       setIsLoading(false);
-      setErrorMsg(
-        "Signed up, but failed to create profile: " + profileError.message
-      );
-      toast.error(
-        `Profile creation failed: ${profileError.message}. Please contact support.`
-      );
+      setErrorMsg("Sign up failed: " + profileError.message);
+      toast.error(`Sign up failed: ${profileError.message}`);
       return;
     }
 
+    setIsLoading(false);
     toast.success("Sign up successful!!");
     router.push("/home");
   };

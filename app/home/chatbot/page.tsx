@@ -12,10 +12,21 @@ import {
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { supabase } from "@/utils/supabase";
+import { usePathname } from "next/navigation";
+
+type Profile = {
+  studentName: string | null;
+  studentMacID: number | null;
+};
 
 export default function ChatbotPage() {
   const [loading, setLoading] = useState(false);
   const [questions, setQuestions] = useState<string[]>([]);
+
+  const pathname = usePathname();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   //   useEffect(() => {
   //     const fetchQuestions = async () => {
   //       setLoading(true);
@@ -36,6 +47,39 @@ export default function ChatbotPage() {
   //     fetchQuestions();
   //   }, []);
 
+  useEffect(() => {
+    async function loadProfile() {
+      // Get currently logged-in user
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        setLoading(false);
+        return;
+      }
+
+      // Get profile for this user
+      const { data, error } = await supabase
+        .from("student")
+        .select("studentName, studentMacID")
+        .eq("id", user.id) // same as auth.users.id
+        .single();
+
+      if (!error && data) {
+        setProfile({
+          studentName: data.studentName,
+          studentMacID: data.studentMacID,
+        });
+      }
+
+      setLoading(false);
+    }
+
+    loadProfile();
+  }, []);
+
   const newQuestions = [
     "What is the main purpose of the law?",
     "What are the potential risks of the law?",
@@ -44,13 +88,12 @@ export default function ChatbotPage() {
   ];
 
   return (
-    <div className="flex flex-col items-center text-center mt-20">
-      <h1 className="text-3xl font-semibold text-red-700 mb-2">
-        Welcome to LawWriteAI
+    <div className="max-w-7xl flex flex-col items-center text-center mt-20 mx-auto p-8">
+      <h1 className="text-3xl font-semibold text-mq-red mb-2">
+        Welcome to LawWriteAI, {profile?.studentName}
       </h1>
-      <p className="text-gray-500 text-md">
-        This is a AI Chabot can generate questions based on the context of the
-        law document and help you to fully understand the law document.
+      <p className="text-gray-500 text-md font-bold">
+        StudentID: {profile?.studentMacID}
       </p>
 
       {loading ? (
