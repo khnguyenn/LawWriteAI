@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "framer-motion";
+
 export default function HowItWorks() {
   const steps = [
     {
@@ -111,36 +113,117 @@ export default function HowItWorks() {
 
       <div className="relative max-w-5xl mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-16">
-          <p className="text-white/80 font-medium tracking-wide uppercase text-sm mb-3">
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
+          <motion.p
+            className="text-white/80 font-medium tracking-wide uppercase text-sm mb-3"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
             Assignment Workflow
-          </p>
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-white">
+          </motion.p>
+          <motion.h2
+            className="text-2xl md:text-3xl lg:text-4xl font-semibold text-white"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             How It Works
-          </h2>
-          <p className="mt-4 text-white/70 max-w-xl mx-auto">
+          </motion.h2>
+          <motion.p
+            className="mt-4 text-white/70 max-w-xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
             Follow the steps below to complete your assignment.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {/* Steps */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <motion.div
+          className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={{
+            visible: {
+              transition: {
+                staggerChildren: 0.2,
+              },
+            },
+          }}
+        >
           {steps.map((step, index) => (
-            <div key={step.number} className="group relative">
+            <motion.div
+              key={step.number}
+              className="group relative"
+              variants={{
+                hidden: { opacity: 0, y: 50, scale: 0.9 },
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  scale: 1,
+                  transition: {
+                    duration: 0.6,
+                    ease: [0.25, 0.46, 0.45, 0.94],
+                  },
+                },
+              }}
+            >
               {/* Connector line for desktop */}
               {index < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-10 left-[60%] w-full h-[2px] bg-gradient-to-r from-white/30 to-transparent"></div>
+                <motion.div
+                  className="hidden lg:block absolute top-10 left-[60%] w-full h-[2px] bg-gradient-to-r from-white/30 to-transparent"
+                  initial={{ scaleX: 0 }}
+                  whileInView={{ scaleX: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, delay: 0.3 + index * 0.2 }}
+                  style={{ transformOrigin: "left" }}
+                ></motion.div>
               )}
 
-              <div className="relative p-6 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm hover:bg-white/20 hover:border-white/40 transition-all duration-300">
+              <motion.div
+                className="relative p-6 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm hover:bg-white/20 hover:border-white/40 transition-all duration-300"
+                whileHover={{
+                  scale: 1.05,
+                  y: -5,
+                  transition: { duration: 0.3 },
+                }}
+              >
                 {/* Step number badge */}
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="text-xs font-bold text-white bg-white/20 px-2.5 py-1 rounded-full">
+                  <motion.span
+                    className="text-xs font-bold text-white bg-white/20 px-2.5 py-1 rounded-full"
+                    initial={{ scale: 0 }}
+                    whileInView={{ scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{
+                      delay: 0.4 + index * 0.2,
+                      type: "spring",
+                      stiffness: 200,
+                    }}
+                  >
                     {step.number}
-                  </span>
-                  <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-white group-hover:bg-white group-hover:text-mq-red transition-all duration-300">
+                  </motion.span>
+                  <motion.div
+                    className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-white group-hover:bg-white group-hover:text-mq-red transition-all duration-300"
+                    initial={{ rotate: -180, opacity: 0 }}
+                    whileInView={{ rotate: 0, opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.5 + index * 0.2, duration: 0.6 }}
+                  >
                     {step.icon}
-                  </div>
+                  </motion.div>
                 </div>
 
                 <h3 className="text-lg font-semibold text-white mb-2">
@@ -149,10 +232,10 @@ export default function HowItWorks() {
                 <p className="text-sm text-white/70 leading-relaxed">
                   {step.description}
                 </p>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
