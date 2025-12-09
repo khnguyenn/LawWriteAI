@@ -89,6 +89,65 @@ export default function Home() {
     console.log("Saving...");
   };
 
+  // Create formatted text with highlights for the left side (original with removals)
+  const highlightedOriginalHtml = useMemo(() => {
+    const hasMatches = diffParts.some((part) => !part.added && !part.removed);
+
+    if (!userText || userText.trim() === "" || !hasMatches) {
+      // Highlight everything in red
+      return SAMPLE_HTML.replace(/>([^<]+)</g, (match, textContent) => {
+        if (!textContent.trim()) return match;
+        return `><mark style="background-color: #fecaca; color: #991b1b; padding: 0 2px; border-radius: 2px;">${textContent}</mark><`;
+      });
+    }
+
+    // Build HTML string with highlights from diff parts
+    let html = "";
+
+    diffParts.forEach((part) => {
+      if (part.added) return; // Skip added parts for left side
+
+      const text = part.value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\n/g, "<br>");
+
+      if (part.removed) {
+        html += `<mark style="background-color: #fecaca; color: #991b1b; padding: 0 2px; border-radius: 2px;">${text}</mark>`;
+      } else {
+        html += text;
+      }
+    });
+
+    return `<div>${html}</div>`;
+  }, [diffParts, userText]);
+
+  // Create HTML for user's text with green highlights for additions
+  const highlightedUserHtml = useMemo(() => {
+    if (!userText) return "";
+
+    let html = "";
+    diffParts.forEach((part) => {
+      if (part.removed) return;
+
+      const escaped = part.value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\n\n/g, "</p><p>")
+        .replace(/\n/g, "<br>");
+
+      if (part.added) {
+        html += `<mark style="background-color: #bbf7d0; color: #166534; padding: 0 2px; border-radius: 2px;">${escaped}</mark>`;
+      } else {
+        html += escaped;
+      }
+    });
+
+    return `<p>${html}</p>`;
+  }, [diffParts, userText]);
+
   return (
     <div className="bg-white min-h-screen p-8">
       {/* Context Area Section */}
@@ -126,36 +185,86 @@ export default function Home() {
       {/* Difference Section – only show when showDiff = true */}
       {showDiff && (
         <div className="max-w-7xl mx-auto mt-12">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900">
-            Difference view
-          </h2>
-
-          <div className="grid grid-cols-2 gap-4 bg-white border border-gray-200 rounded-lg p-4">
-            {/* LEFT – removals */}
-            <div>
-              <div className="flex items-center justify-between mb-2 text-xs text-gray-600">
-                <span className="font-semibold text-red-600">
-                  −{removalCount} removal{removalCount !== 1 ? "s" : ""}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Difference View
+            </h2>
+            <div className="flex items-center gap-4 text-sm">
+              <span className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded bg-red-200"></span>
+                <span className="text-gray-600">
+                  Removed ({removalCount} words)
                 </span>
-                <span>1 line</span>
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded bg-green-200"></span>
+                <span className="text-gray-600">
+                  Added ({additionCount} words)
+                </span>
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-6">
+            {/* LEFT – Original with removals */}
+            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+              <div className="bg-red-50 px-4 py-3 border-b border-red-100">
+                <h3 className="font-semibold text-red-700 flex items-center gap-2">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                  Original Letter
+                </h3>
               </div>
-              <div className="bg-red-50 rounded-md px-3 py-2 text-sm font-mono text-gray-900">
-                <span className="mr-3 text-gray-400">{removalCount}</span>
-                {leftSegments}
+              <div className="p-6 max-h-[600px] overflow-y-auto">
+                <div
+                  className="prose prose-sm max-w-none [&_p]:mb-4 [&_p:first-child]:text-right [&_p:first-child]:font-semibold [&_strong]:font-semibold [&_u]:underline [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6"
+                  dangerouslySetInnerHTML={{ __html: highlightedOriginalHtml }}
+                />
               </div>
             </div>
 
-            {/* RIGHT – additions */}
-            <div>
-              <div className="flex items-center justify-between mb-2 text-xs text-gray-600">
-                <span className="font-semibold text-green-600">
-                  + {additionCount} addition{additionCount !== 1 ? "s" : ""}
-                </span>
-                <span>1 line</span>
+            {/* RIGHT – User's version with additions */}
+            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+              <div className="bg-green-50 px-4 py-3 border-b border-green-100">
+                <h3 className="font-semibold text-green-700 flex items-center gap-2">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  Your Rewrite
+                </h3>
               </div>
-              <div className="bg-green-50 rounded-md px-3 py-2 text-sm font-mono text-gray-900">
-                <span className="mr-3 text-gray-400">{additionCount}</span>
-                {rightSegments}
+              <div className="p-6 max-h-[600px] overflow-y-auto">
+                {userText ? (
+                  <div
+                    className="prose prose-sm max-w-none [&_p]:mb-4 [&_mark]:rounded [&_mark]:px-0.5"
+                    dangerouslySetInnerHTML={{ __html: highlightedUserHtml }}
+                  />
+                ) : (
+                  <p className="text-gray-400 italic">
+                    Start typing to see your rewrite here...
+                  </p>
+                )}
               </div>
             </div>
           </div>

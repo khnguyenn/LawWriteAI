@@ -78,7 +78,11 @@ export function DropDownSlideBar() {
           variant="default"
           className="w-full justify-start h-auto p-3 bg-gray-50 hover:bg-gray-100 cursor-pointer"
         >
-          <User2 className="w-5 h-5 shrink-0" />
+          <div className="w-8 h-8 rounded-full bg-mq-red/10 flex items-center justify-center">
+            <span className="text-mq-red font-semibold text-sm">
+              {profile?.studentName?.charAt(0) || "S"}
+            </span>
+          </div>
           <div className="flex flex-col items-start flex-1 min-w-0 ml-3">
             <span className="text-sm font-medium text-gray-900 truncate w-full text-left">
               {profile?.studentName}

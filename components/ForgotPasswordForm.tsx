@@ -28,7 +28,7 @@ export function ForgotPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -112,7 +112,7 @@ export function ForgotPasswordForm() {
             <Button
               type="submit"
               className="bg-mq-red hover:bg-mq-red/90 cursor-pointer"
-              onClick={handleSubmit}
+              onClick={handleResetPassword}
               disabled={isLoading}
             >
               {isLoading ? <Spinner /> : "Reset Password"}

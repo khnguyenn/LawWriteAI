@@ -53,8 +53,9 @@ export function NavBar() {
 
   const navLinks = [
     { href: "/", label: "Home" },
-    { href: "/", label: "Contact Us" },
-    { href: "/", label: "Terms & Privacy" },
+    { href: "/#about", label: "Features" },
+    { href: "/#how-it-works", label: "How It Works" },
+    { href: "/#contact", label: "Contact" },
   ];
 
   return (
@@ -66,7 +67,7 @@ export function NavBar() {
         {/* Logo */}
         <div className="flex lg:flex-1">
           <Link href="/" className="-m-1.5 p-1.5">
-            <span className="sr-only">LawWrite AI</span>
+            <span className="sr-only">LawWrite</span>
             <div className="flex items-center gap-2">
               <Image
                 src={Logo}
@@ -74,7 +75,7 @@ export function NavBar() {
                 className="h-12 w-12 md:h-16 md:w-16 object-cover"
               />
               <span className="text-lg md:text-xl font-bold text-mq-red">
-                LawWriteAI
+                LawWrite
               </span>
             </div>
           </Link>

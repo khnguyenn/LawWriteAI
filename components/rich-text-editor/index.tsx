@@ -68,7 +68,7 @@ export default function RichTextEditor({
     },
     editorProps: {
       attributes: {
-        class: `py-2 px-3 border rounded-md min-h-[1000px] focus:outline-none ${
+        class: `py-2 px-3 border rounded-md h-[600px] overflow-y-auto focus:outline-none ${
           editable ? "bg-white" : "bg-slate-50"
         }`,
       },

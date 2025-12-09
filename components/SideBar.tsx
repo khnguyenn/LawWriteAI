@@ -9,6 +9,8 @@ import {
   HelpCircle,
   Scale,
   Save,
+  Menu,
+  X,
 } from "lucide-react";
 import { DropDownSlideBar } from "./DropDownSlideBar";
 import Link from "next/link";
@@ -17,6 +19,8 @@ import { supabase } from "@/utils/supabase";
 import { useState, useEffect } from "react";
 import Logo from "@/assets/logo2.png";
 import Image from "next/image";
+import { useSidebar } from "./SidebarContext";
+
 type Profile = {
   studentName: string | null;
   studentMacID: number | null;
@@ -26,6 +30,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isOpen, setIsOpen } = useSidebar();
 
   useEffect(() => {
     async function loadProfile() {
@@ -64,19 +69,33 @@ export function Sidebar() {
     { icon: Scale, label: "Scenario", href: "/home" },
     {
       icon: MessagesSquare,
-      label: "AI ChatBot",
+      label: "AI Question Session",
       href: "/home/chatbot",
     },
     { icon: HelpCircle, label: "Help", href: "/home/help" },
-    { icon: Users, label: "About", href: "/home/about" },
     { icon: Save, label: "Log", href: "/home/log" },
   ];
 
   return (
-    <div className="w-72 bg-white border-r border-gray-200 flex flex-col h-screen fixed left-0 top-0">
-      <div className="px-4 py-4 border-b border-gray-200 flex items-center">
-        <Image src={Logo} alt="Logo" width={90} height={90} />
-        <h1 className="text-mq-red text-2xl font-bold">LawWriteAI</h1>
+    <div
+      className={`w-72 bg-white border-r border-gray-200 flex flex-col h-screen fixed left-0 top-0 z-40 transition-transform duration-300 ease-in-out ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      }`}
+    >
+      <div className="px-4 py-4 border-b border-gray-200 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Image src={Logo} alt="Logo" width={60} height={60} />
+          <h1 className="text-mq-red text-2xl font-bold">LawWrite</h1>
+        </div>
+
+        {/* Close button */}
+        <button
+          onClick={() => setIsOpen(false)}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          aria-label="Close sidebar"
+        >
+          <X className="w-5 h-5 text-gray-600" />
+        </button>
       </div>
 
       <nav className="flex-1 p-4 overflow-y-auto">

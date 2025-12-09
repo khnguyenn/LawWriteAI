@@ -5,6 +5,10 @@ import Image from "next/image";
 import Background from "@/assets/maclaw.jpg";
 import { useRouter } from "next/navigation";
 import AboutSection from "@/components/AboutSection";
+import HowItWorks from "@/components/HowItWorks";
+import AboutUs from "@/components/AboutUs";
+import ContactSection from "@/components/ContactSection";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   const router = useRouter();
@@ -53,6 +57,14 @@ export default function Home() {
         </div>
       </div>
       <AboutSection />
+
+      <HowItWorks />
+
+      <AboutUs />
+
+      <ContactSection />
+
+      <Footer />
     </div>
   );
 }
