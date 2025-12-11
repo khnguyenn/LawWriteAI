@@ -22,6 +22,11 @@ import { FileText, Redo2, RotateCcw, Save, Send, X, Lock } from "lucide-react";
 import RichTextEditor from "@/components/rich-text-editor";
 import { toast } from "sonner";
 import type { JSONContent } from "@tiptap/react";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import TextAlign from "@tiptap/extension-text-align";
+import Highlight from "@tiptap/extension-highlight";
+import Underline from "@tiptap/extension-underline";
 import { supabase } from "@/utils/supabase";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect } from "react";
@@ -136,64 +141,150 @@ export default function Home() {
     [diffParts]
   );
 
-  // Create formatted text with highlights for the left side (original with removals)
-  const highlightedOriginalHtml = useMemo(() => {
-    const hasMatches = diffParts.some((part) => !part.added && !part.removed);
+  // Helper to apply diff highlights to HTML while preserving formatting
+  const applyHighlightsToHtml = (
+    html: string,
+    plainText: string,
+    showRemoved: boolean
+  ) => {
+    if (!html || !plainText) return html;
 
-    if (!userText || userText.trim() === "" || !hasMatches) {
-      // Highlight everything in red
-      return SAMPLE_HTML.replace(/>([^<]+)</g, (match, textContent) => {
-        if (!textContent.trim()) return match;
-        return `><mark style="background-color: #fecaca; color: #991b1b; padding: 0 2px; border-radius: 2px;">${textContent}</mark><`;
-      });
+    // Create a map of character positions to highlight
+    const highlightMap = new Map<number, "removed" | "added">();
+    let charPos = 0;
+
+    diffParts.forEach((part) => {
+      if (showRemoved && part.removed) {
+        // Mark positions to highlight in red
+        for (let i = 0; i < part.value.length; i++) {
+          highlightMap.set(charPos + i, "removed");
+        }
+      } else if (!showRemoved && part.added) {
+        // Mark positions to highlight in green
+        for (let i = 0; i < part.value.length; i++) {
+          highlightMap.set(charPos + i, "added");
+        }
+      }
+
+      // Advance position for non-skipped parts
+      if (showRemoved && !part.added) {
+        charPos += part.value.length;
+      } else if (!showRemoved && !part.removed) {
+        charPos += part.value.length;
+      }
+    });
+
+    // Parse HTML and apply highlights to text nodes
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    let currentPos = 0;
+
+    const processNode = (node: Node): Node => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent || "";
+
+        // Return empty nodes as-is
+        if (!text) return node;
+
+        const fragment = document.createDocumentFragment();
+        let lastIndex = 0;
+        let inHighlight = false;
+        let currentHighlight: "removed" | "added" | null = null;
+        let highlightSpan: HTMLElement | null = null;
+
+        for (let i = 0; i < text.length; i++) {
+          const highlight = highlightMap.get(currentPos + i);
+
+          if (highlight && highlight !== currentHighlight) {
+            // Close previous highlight if any
+            if (inHighlight && highlightSpan) {
+              highlightSpan.appendChild(
+                document.createTextNode(text.substring(lastIndex, i))
+              );
+              fragment.appendChild(highlightSpan);
+              lastIndex = i;
+            } else if (i > lastIndex) {
+              fragment.appendChild(
+                document.createTextNode(text.substring(lastIndex, i))
+              );
+              lastIndex = i;
+            }
+
+            // Start new highlight
+            highlightSpan = document.createElement("mark");
+            const bgColor = highlight === "removed" ? "#fecaca" : "#bbf7d0";
+            const textColor = highlight === "removed" ? "#991b1b" : "#166534";
+            highlightSpan.setAttribute(
+              "style",
+              `background-color: ${bgColor}; color: ${textColor}; padding: 2px 4px; border-radius: 3px; font-weight: 500;`
+            );
+            inHighlight = true;
+            currentHighlight = highlight;
+          } else if (!highlight && inHighlight) {
+            // Close highlight
+            if (highlightSpan) {
+              highlightSpan.appendChild(
+                document.createTextNode(text.substring(lastIndex, i))
+              );
+              fragment.appendChild(highlightSpan);
+            }
+            lastIndex = i;
+            inHighlight = false;
+            currentHighlight = null;
+            highlightSpan = null;
+          }
+        }
+
+        // Handle remaining text
+        if (inHighlight && highlightSpan) {
+          highlightSpan.appendChild(
+            document.createTextNode(text.substring(lastIndex))
+          );
+          fragment.appendChild(highlightSpan);
+        } else if (lastIndex < text.length) {
+          fragment.appendChild(
+            document.createTextNode(text.substring(lastIndex))
+          );
+        } else if (lastIndex === 0 && text.length === 0) {
+          // Empty text node
+          fragment.appendChild(document.createTextNode(""));
+        }
+
+        currentPos += text.length;
+        return fragment;
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const clone = node.cloneNode(false);
+        for (let i = 0; i < node.childNodes.length; i++) {
+          const processed = processNode(node.childNodes[i]);
+          clone.appendChild(processed);
+        }
+        return clone;
+      }
+
+      return node.cloneNode(true);
+    };
+
+    const processedBody = document.createElement("div");
+    for (let i = 0; i < doc.body.childNodes.length; i++) {
+      const processed = processNode(doc.body.childNodes[i]);
+      processedBody.appendChild(processed);
     }
 
-    // Build HTML string with highlights from diff parts
-    let html = "";
+    return processedBody.innerHTML;
+  };
 
-    diffParts.forEach((part) => {
-      if (part.added) return; // Skip added parts for left side
-
-      const text = part.value
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\n/g, "<br>");
-
-      if (part.removed) {
-        html += `<mark style="background-color: #fecaca; color: #991b1b; padding: 0 2px; border-radius: 2px;">${text}</mark>`;
-      } else {
-        html += text;
-      }
-    });
-
-    return `<div>${html}</div>`;
+  // Apply inline highlights to formatted HTML
+  const highlightedOriginalHtml = useMemo(() => {
+    if (!userText || userText.trim() === "") {
+      return SAMPLE_HTML;
+    }
+    return applyHighlightsToHtml(SAMPLE_HTML, SAMPLE, true);
   }, [diffParts, userText]);
 
-  // Create HTML for user's text with green highlights for additions
   const highlightedUserHtml = useMemo(() => {
-    if (!userText) return "";
-
-    let html = "";
-    diffParts.forEach((part) => {
-      if (part.removed) return;
-
-      const escaped = part.value
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\n\n/g, "</p><p>")
-        .replace(/\n/g, "<br>");
-
-      if (part.added) {
-        html += `<mark style="background-color: #bbf7d0; color: #166534; padding: 0 2px; border-radius: 2px;">${escaped}</mark>`;
-      } else {
-        html += escaped;
-      }
-    });
-
-    return `<p>${html}</p>`;
-  }, [diffParts, userText]);
+    if (!userHtml) return "";
+    return applyHighlightsToHtml(userHtml, userText, false);
+  }, [diffParts, userText, userHtml]);
 
   // Save the user's text and json to the database - SAVE BUTTON
   const handleSave = async () => {
@@ -449,11 +540,17 @@ export default function Home() {
                   Added ({additionCount} words)
                 </span>
               </span>
+              <button
+                onClick={() => setShowDiff(false)}
+                className="ml-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Close Comparison
+              </button>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
-            {/* LEFT – Original with removals */}
+            {/* LEFT – Original with removals highlighted */}
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
               <div className="bg-red-50 px-4 py-3 border-b border-red-100">
                 <h3 className="font-semibold text-red-700 flex items-center gap-2">
@@ -470,18 +567,18 @@ export default function Home() {
                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                     />
                   </svg>
-                  Original Letter
+                  Sample Letter (red = removed)
                 </h3>
               </div>
-              <div className="p-6 max-h-[600px] overflow-y-auto">
+              <div className="p-6 max-h-[600px] overflow-y-auto bg-white">
                 <div
-                  className="prose prose-sm max-w-none [&_p]:mb-4 [&_p:first-child]:text-right [&_p:first-child]:font-semibold [&_strong]:font-semibold [&_u]:underline [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6"
+                  className="prose prose-sm max-w-none [&_p]:mb-4 [&_strong]:font-bold [&_em]:italic [&_u]:underline [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:text-xl [&_h2]:font-bold [&_h3]:text-lg [&_h3]:font-bold [&_mark]:inline"
                   dangerouslySetInnerHTML={{ __html: highlightedOriginalHtml }}
                 />
               </div>
             </div>
 
-            {/* RIGHT – User's version with additions */}
+            {/* RIGHT – User's version with additions highlighted */}
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
               <div className="bg-green-50 px-4 py-3 border-b border-green-100">
                 <h3 className="font-semibold text-green-700 flex items-center gap-2">
@@ -498,13 +595,13 @@ export default function Home() {
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
-                  Your Rewrite
+                  Your Letter (green = added)
                 </h3>
               </div>
-              <div className="p-6 max-h-[600px] overflow-y-auto">
-                {userText ? (
+              <div className="p-6 max-h-[600px] overflow-y-auto bg-white">
+                {userHtml ? (
                   <div
-                    className="prose prose-sm max-w-none [&_p]:mb-4 [&_mark]:rounded [&_mark]:px-0.5"
+                    className="prose prose-sm max-w-none [&_p]:mb-4 [&_strong]:font-bold [&_em]:italic [&_u]:underline [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:text-xl [&_h2]:font-bold [&_h3]:text-lg [&_h3]:font-bold [&_mark]:inline"
                     dangerouslySetInnerHTML={{ __html: highlightedUserHtml }}
                   />
                 ) : (

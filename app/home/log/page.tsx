@@ -368,7 +368,7 @@ export default function LogPage() {
                   <div
                     className={`p-3 rounded-xl shadow-lg ${
                       selectedVersion.isFinal
-                        ? "bg-gradient-to-br from-purple-600 to-purple-700"
+                        ? "bg-gradient-to-br from-mq-magenta to-mq-magenta/80"
                         : "bg-gradient-to-br from-mq-red to-deep-red"
                     }`}
                   >
@@ -386,7 +386,7 @@ export default function LogPage() {
                           : "Saved Draft"}
                       </h3>
                       {selectedVersion.isFinal && (
-                        <span className="px-2 py-1 bg-purple-600 text-white text-xs font-bold rounded-md">
+                        <span className="px-2 py-1 bg-mq-magenta text-white text-xs font-bold rounded-md">
                           LOCKED
                         </span>
                       )}
@@ -438,7 +438,7 @@ export default function LogPage() {
                       <Lock className="w-5 h-5" />
                       Editing Locked
                     </div>
-                    <button className="flex-1 bg-purple-600 text-white font-bold py-4 px-6 rounded-xl hover:bg-purple-700 hover:shadow-xl hover:scale-105 transition-all text-base flex items-center justify-center gap-2.5 group">
+                    <button className="flex-1 bg-mq-magenta text-white font-bold py-4 px-6 rounded-xl hover:bg-mq-magenta/90 hover:shadow-xl hover:scale-105 transition-all text-base flex items-center justify-center gap-2.5 group">
                       <FileText className="w-5 h-5" />
                       View Final Version
                     </button>
