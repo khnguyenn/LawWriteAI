@@ -18,17 +18,68 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { FileText, Redo2, RotateCcw, Save, Send } from "lucide-react";
+import { FileText, Redo2, RotateCcw, Save, Send, X, Lock } from "lucide-react";
 import RichTextEditor from "@/components/rich-text-editor";
+import { toast } from "sonner";
+import type { JSONContent } from "@tiptap/react";
+import { supabase } from "@/utils/supabase";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useEffect } from "react";
 
 const SAMPLE = SAMPLE_TEXT;
 
 export default function Home() {
   const router = useRouter();
   const [userText, setUserText] = useState(""); // plain text for diff
+  const [userHtml, setUserHtml] = useState(""); // formatted HTML for preview
+  const [userJson, setUserJson] = useState<JSONContent | null>(null); // rich JSON for saving
   const [showDiff, setShowDiff] = useState(false);
   const [userSubmitted, setUserSubmitted] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [agreeToSubmit, setAgreeToSubmit] = useState(false);
+  const [hasFinalSubmission, setHasFinalSubmission] = useState(false);
+  const [checkingSubmission, setCheckingSubmission] = useState(true);
+
+  useEffect(() => {
+    const checkUserAndSubmission = async () => {
+      setCheckingSubmission(true);
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        router.push("/");
+        return;
+      }
+
+      // Check if user already has a final submission
+      const { data: finalLetters, error: letterError } = await supabase
+        .from("letter")
+        .select("id")
+        .eq("studentID", user.id)
+        .eq("isFinal", true)
+        .limit(1);
+
+      if (letterError) {
+        setCheckingSubmission(false);
+        return;
+      }
+
+      if (finalLetters && finalLetters.length > 0) {
+        setHasFinalSubmission(true);
+      }
+
+      setCheckingSubmission(false);
+    };
+
+    checkUserAndSubmission();
+  }, [router]);
 
   // Compare plain text (not HTML)
   const diffParts = useMemo(() => diffWords(SAMPLE, userText), [userText]);
@@ -84,10 +135,6 @@ export default function Home() {
       }, 0),
     [diffParts]
   );
-
-  const handleSave = () => {
-    console.log("Saving...");
-  };
 
   // Create formatted text with highlights for the left side (original with removals)
   const highlightedOriginalHtml = useMemo(() => {
@@ -148,8 +195,205 @@ export default function Home() {
     return `<p>${html}</p>`;
   }, [diffParts, userText]);
 
+  // Save the user's text and json to the database - SAVE BUTTON
+  const handleSave = async () => {
+    console.log("PLAIN TEXT:", userText);
+    console.log("TIPTAP JSON:", userJson);
+
+    setIsSaving(true);
+    setIsLoading(true);
+
+    // Save the user's text and json to the database
+    // Get current user
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) {
+      toast.error("You must be logged in to save your letter.");
+      setIsSaving(false);
+      setIsLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.from("letter").insert({
+      letterText: userText, // plain text
+      letterJson: userJson, // TipTap JSON (jsonb column)
+      studentID: user.id, // or your student table id if different
+      isFinal: false,
+    });
+
+    if (error) {
+      setIsSaving(false);
+      setIsLoading(false);
+      toast.error("Failed to save letter");
+      return;
+    }
+
+    // SUCCESS
+    setIsSaving(false);
+    setIsLoading(false);
+    toast.success("Letter saved successfully!");
+  };
+
+  const handlePreviewModal = () => {
+    if (!userText || userText.trim() === "" || !userJson) {
+      toast.error("Please write some text to save your progress.");
+      return;
+    }
+    setShowPreviewModal(true);
+  };
+
+  // Handle reset
+  const handleReset = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setUserText("");
+    setUserHtml("");
+    setUserJson(null);
+    setShowDiff(false);
+  };
+
+  const handleSubmit = () => {
+    if (hasFinalSubmission) {
+      toast.error(
+        "You have already submitted a final letter. You cannot submit another one."
+      );
+      return;
+    }
+
+    if (!userText || userText.trim() === "" || !userJson) {
+      toast.error("Please write some text to submit.");
+      return;
+    }
+    setAgreeToSubmit(false); // Reset checkbox when opening modal
+    setShowSubmitModal(true);
+  };
+
+  const closeSubmitModal = () => {
+    setShowSubmitModal(false);
+    setAgreeToSubmit(false); // Reset checkbox when closing
+  };
+
+  const handleFinalSubmit = async () => {
+    if (hasFinalSubmission) {
+      toast.error(
+        "You have already submitted a final letter. You cannot submit another one."
+      );
+      return;
+    }
+
+    if (!agreeToSubmit) {
+      toast.error("Please agree to submit your letter before proceeding.");
+      return;
+    }
+
+    setIsSaving(true);
+    setIsLoading(true);
+
+    // Get current user
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      toast.error("You must be logged in to submit your letter.");
+      setIsSaving(false);
+      setIsLoading(false);
+      return;
+    }
+
+    // Double-check if user already has a final submission
+    const { data: existingFinal } = await supabase
+      .from("letter")
+      .select("id")
+      .eq("studentID", user.id)
+      .eq("isFinal", true)
+      .limit(1);
+
+    if (existingFinal && existingFinal.length > 0) {
+      toast.error("You have already submitted a final letter.");
+      setIsSaving(false);
+      setIsLoading(false);
+      setHasFinalSubmission(true);
+      return;
+    }
+
+    const { error } = await supabase.from("letter").insert({
+      letterText: userText,
+      letterJson: userJson,
+      studentID: user.id,
+      isFinal: true, // Mark as final submission
+    });
+
+    if (error) {
+      setIsSaving(false);
+      setIsLoading(false);
+      toast.error("Failed to submit letter");
+      return;
+    }
+
+    // SUCCESS
+    setIsSaving(false);
+    setIsLoading(false);
+    setShowSubmitModal(false);
+    toast.success("Letter submitted successfully!");
+
+    // Navigate to next page after short delay
+    setTimeout(() => {
+      router.push("/home/chatbot");
+    }, 1000);
+  };
+
   return (
-    <div className="bg-white min-h-screen p-8">
+    <div className="bg-white min-h-screen p-8 relative">
+      {/* Loading/Checking Overlay */}
+      {checkingSubmission && (
+        <div className="fixed inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-mq-red border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-lg font-semibold text-charcoal">
+              Checking your submission status...
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Blocked Overlay - User Already Submitted */}
+      {hasFinalSubmission && !checkingSubmission && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-8 shadow-2xl text-center">
+            <div className="w-20 h-20 bg-mq-magenta/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Lock className="w-10 h-10 text-mq-magenta" />
+            </div>
+            <h2 className="text-3xl font-bold text-charcoal mb-4">
+              Final Submission Already Made
+            </h2>
+            <p className="text-lg text-charcoal/70 mb-8">
+              You have already submitted your final letter. You cannot create or
+              submit additional letters.
+            </p>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => router.push("/home/log")}
+                className="px-6 py-3 bg-mq-magenta text-white font-semibold rounded-xl hover:bg-mq-magenta/90 transition-all"
+              >
+                View Your Submissions
+              </button>
+              <button
+                onClick={() => router.push("/home/chatbot")}
+                className="px-6 py-3 bg-charcoal text-white font-semibold rounded-xl hover:bg-charcoal/90 transition-all"
+              >
+                Go to Chatbot
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Context Area Section */}
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between mb-8">
@@ -174,7 +418,10 @@ export default function Home() {
           />
           <RichTextEditor
             title="Your Letter"
+            content={userHtml}
+            onChange={setUserHtml}
             onTextChange={setUserText}
+            onJsonChange={setUserJson}
             editable={true}
             disablePaste={true}
             showWordCount={true}
@@ -274,67 +521,27 @@ export default function Home() {
       {/* Button Section */}
       <div className="max-w-7xl mx-auto mt-10">
         <div className="flex justify-center gap-6 flex-wrap">
-          <AlertDialog
-            open={isDialogOpen}
-            onOpenChange={(open) => {
-              // Prevent closing if submission is in progress
-              if (!open && userSubmitted) return;
-              setIsDialogOpen(open);
-            }}
+          <Button
+            className="flex h-14 min-w-[190px] items-center gap-4 px-8 rounded-2xl border border-gray-200 bg-white text-gray-900 text-lg font-semibold shadow-sm hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 ease-in-out cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleSubmit}
+            disabled={hasFinalSubmission || checkingSubmission}
           >
-            <AlertDialogTrigger asChild>
-              <Button className="flex h-14 min-w-[190px] items-center gap-4 px-8 rounded-2xl border border-gray-200 bg-white text-gray-900 text-lg font-semibold shadow-sm hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 ease-in-out cursor-pointer">
+            {hasFinalSubmission ? (
+              <>
+                <Lock className="w-7 h-7 text-gray-400" />
+                <span className="text-lg">Submission Locked</span>
+              </>
+            ) : (
+              <>
                 <Send className="w-7 h-7 text-red-500" />
                 <span className="text-lg">Submit</span>
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  Are you sure you want to submit?
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  You will not be able to change your answer after submitting.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel
-                  disabled={userSubmitted}
-                  className="bg-white text-gray-800 hover:bg-white hover:text-gray-800 hover:border-gray-300"
-                >
-                  Cancel
-                </AlertDialogCancel>
-                <Button
-                  className="text-base font-semibold rounded-lg border-2 bg-bright-red text-white active:scale-95 transition-all duration-200"
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (userSubmitted) return;
-                    setUserSubmitted(true);
-                    // Wait for 2 seconds before navigating (dialog stays open during this time)
-                    await new Promise((resolve) => setTimeout(resolve, 2000));
-                    router.push("/home/chatbot");
-                  }}
-                  disabled={userSubmitted}
-                >
-                  {userSubmitted ? (
-                    <>
-                      <Spinner className="w-4 h-4" />
-                      <span className="ml-2">Please wait</span>
-                    </>
-                  ) : (
-                    "Submit"
-                  )}
-                </Button>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+              </>
+            )}
+          </Button>
 
           <Button
-            onClick={() => {
-              setUserText("");
-              setShowDiff(false); // hide diff on reset
-            }}
+            onClick={handleReset}
+            disabled={isSaving}
             className="flex h-14 min-w-[190px] items-center gap-4 px-8 rounded-2xl border border-gray-200 bg-white text-gray-900 text-lg font-semibold shadow-sm hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 ease-in-out cursor-pointer"
           >
             <RotateCcw className="w-7 h-7 text-blue-500" />
@@ -351,7 +558,7 @@ export default function Home() {
           </Button>
 
           <Button
-            onClick={handleSave}
+            onClick={handlePreviewModal}
             className="flex h-14 min-w-[190px] items-center gap-4 px-8 rounded-2xl border border-gray-200 bg-white text-gray-900 text-lg font-semibold shadow-sm hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 ease-in-out cursor-pointer"
           >
             <Save className="w-7 h-7 text-blue-500" />
@@ -364,6 +571,227 @@ export default function Home() {
           </Button>
         </div>
       </div>
+
+      {/* Preview Modal */}
+      {showPreviewModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-mq-red to-deep-red p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                    <FileText className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-white">
+                      Preview Your Letter
+                    </h3>
+                    <p className="text-sm text-white/80">
+                      Review your letter before saving as draft
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowPreviewModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body - Scrollable Preview */}
+            <div className="flex-1 overflow-y-auto p-8 bg-gray-50">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                <div
+                  className="prose prose-sm max-w-none [&_p]:mb-4 [&_strong]:font-semibold [&_em]:italic [&_u]:underline [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:text-xl [&_h2]:font-bold [&_h3]:text-lg [&_h3]:font-bold [&_.ProseMirror]:outline-none"
+                  dangerouslySetInnerHTML={{ __html: userHtml }}
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex gap-3 justify-between items-center">
+              <div className="text-sm text-gray-600">
+                <span className="font-medium">Word count:</span>{" "}
+                {userText.trim().split(/\s+/).filter(Boolean).length} words
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowPreviewModal(false)}
+                  disabled={isSaving}
+                  className="px-5 py-2.5 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    await handleSave();
+                    setShowPreviewModal(false);
+                  }}
+                  disabled={isSaving}
+                  className="px-5 py-2.5 rounded-lg text-sm font-medium bg-mq-red text-white hover:bg-mq-red/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isSaving ? (
+                    <>
+                      <Spinner className="w-4 h-4" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>Save Draft</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Submit Modal */}
+      {showSubmitModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-mq-red to-deep-red p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                    <FileText className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-white">
+                      Submit Your Letter
+                    </h3>
+                    <p className="text-sm text-white/80">
+                      Review your letter before submitting
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={closeSubmitModal}
+                  className="text-white/80 hover:text-white transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body - Scrollable Preview */}
+            <div className="flex-1 overflow-y-auto p-8 bg-gray-50">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                <div
+                  className="prose prose-sm max-w-none [&_p]:mb-4 [&_strong]:font-semibold [&_em]:italic [&_u]:underline [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:text-xl [&_h2]:font-bold [&_h3]:text-lg [&_h3]:font-bold [&_.ProseMirror]:outline-none"
+                  dangerouslySetInnerHTML={{ __html: userHtml }}
+                />
+              </div>
+            </div>
+
+            <div className="px-8 bg-gray-50 mb-5">
+              <div
+                className={`p-4 rounded-lg border-2 transition-all ${
+                  agreeToSubmit
+                    ? "border-green-200 bg-green-50"
+                    : "border-red-200 bg-red-50/50"
+                }`}
+              >
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 text-sm">
+                    <svg
+                      className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                      />
+                    </svg>
+                    <span className="text-red-700">
+                      <strong>Warning:</strong> You cannot edit or go back once
+                      you submit your letter
+                    </span>
+                  </div>
+                  <div
+                    className={`flex items-start gap-3 p-3 rounded-lg border-2 transition-all cursor-pointer ${
+                      agreeToSubmit
+                        ? "border-green-400 bg-green-100"
+                        : "border-gray-300 bg-white hover:bg-gray-100"
+                    }`}
+                    onClick={() => setAgreeToSubmit(!agreeToSubmit)}
+                  >
+                    <Checkbox
+                      className="w-5 h-5 mt-0.5"
+                      id="submit-checkbox"
+                      checked={agreeToSubmit}
+                      onCheckedChange={(checked) =>
+                        setAgreeToSubmit(checked === true)
+                      }
+                    />
+                    <label
+                      htmlFor="submit-checkbox"
+                      className="cursor-pointer text-sm flex-1"
+                    >
+                      <strong className="text-charcoal">
+                        I have reviewed my letter and agree to submit it as
+                        final. I understand I cannot make changes after
+                        submission.
+                      </strong>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex gap-3 justify-between items-center">
+              <div className="text-sm text-gray-600">
+                <span className="font-medium">Word count:</span>{" "}
+                {userText.trim().split(/\s+/).filter(Boolean).length} words
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={closeSubmitModal}
+                  disabled={isSaving}
+                  className="px-5 py-2.5 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleFinalSubmit}
+                  disabled={isSaving || !agreeToSubmit}
+                  className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all disabled:cursor-not-allowed flex items-center gap-2 ${
+                    agreeToSubmit && !isSaving
+                      ? "bg-mq-red text-white hover:bg-mq-red/90"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
+                  title={
+                    !agreeToSubmit ? "Please agree to the terms above" : ""
+                  }
+                >
+                  {isSaving ? (
+                    <>
+                      <Spinner className="w-4 h-4" />
+                      <span>Submitting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      <span>Submit Final</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

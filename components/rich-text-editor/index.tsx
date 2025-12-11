@@ -1,8 +1,7 @@
 "use client";
 
-import { useEditor } from "@tiptap/react";
+import { useEditor, EditorContent, JSONContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { EditorContent } from "@tiptap/react";
 import MenuBar from "./menu-bar";
 import TextAlign from "@tiptap/extension-text-align";
 import Highlight from "@tiptap/extension-highlight";
@@ -13,8 +12,9 @@ import { useState, useEffect } from "react";
 interface RichTextEditorProps {
   title?: string;
   content?: string;
-  onChange?: (content: string) => void;
-  onTextChange?: (plainText: string) => void;
+  onChange?: (content: string) => void; // for the html content
+  onTextChange?: (plainText: string) => void; // for the plain text content
+  onJsonChange?: (json: JSONContent) => void; // for saving the json content
   editable?: boolean;
   disablePaste?: boolean;
   showWordCount?: boolean;
@@ -25,6 +25,7 @@ export default function RichTextEditor({
   content = "",
   onChange,
   onTextChange,
+  onJsonChange,
   editable = true,
   disablePaste = false,
   showWordCount = false,
@@ -62,9 +63,14 @@ export default function RichTextEditor({
     editable,
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
-      onChange?.(editor.getHTML());
-      onTextChange?.(editor.getText());
-      updateWordCount(editor.getText());
+      const html = editor.getHTML();
+      const text = editor.getText();
+      const json = editor.getJSON();
+
+      onChange?.(html); // html content
+      onTextChange?.(text); // plain text for diff
+      onJsonChange?.(json); // rich JSON
+      updateWordCount(text); // word count
     },
     editorProps: {
       attributes: {
@@ -83,6 +89,17 @@ export default function RichTextEditor({
       updateWordCount(editor.getText());
     }
   }, [editor]);
+
+  // Update editor content when content prop changes (for reset functionality)
+  useEffect(() => {
+    if (editor && content !== undefined) {
+      const currentContent = editor.getHTML();
+      // Only update if content has actually changed to avoid infinite loops
+      if (currentContent !== content) {
+        editor.commands.setContent(content);
+      }
+    }
+  }, [content, editor]);
 
   return (
     <div className="flex flex-col h-full">
