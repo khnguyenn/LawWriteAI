@@ -15,8 +15,8 @@ export default function AboutUs() {
       <p className="w-3/5 mb-14 text-gray-500 text-sm">
         Macquarie Law School x Macquarie School of Computing Joint Initiative
       </p>
-      <div className="flex flex-wrap gap-6 items-center justify-center">
-        <div className="group flex flex-col items-center py-8 text-sm bg-white border border-gray-300/60 w-64 rounded-md cursor-pointer hover:border-mq-red hover:bg-mq-red transition-all duration-200 focus:outline-none focus-visible:outline-none active:bg-mq-red active:border-mq-red select-none">
+      <div className="flex flex-wrap gap-6 items-stretch justify-center">
+        <div className="group flex flex-col items-center py-8 text-sm bg-white border border-gray-300/60 w-64 h-full min-h-[280px] rounded-md cursor-pointer hover:border-mq-red hover:bg-mq-red transition-all duration-200 focus:outline-none focus-visible:outline-none active:bg-mq-red active:border-mq-red select-none">
           <img
             className="w-24 rounded-full"
             src={userImage1.src}
@@ -33,7 +33,7 @@ export default function AboutUs() {
           </p>
         </div>
 
-        <div className="group flex flex-col items-center py-8 text-sm bg-white border border-gray-300/60 w-64 rounded-md cursor-pointer hover:border-mq-red hover:bg-mq-red transition-all duration-200 focus:outline-none focus-visible:outline-none active:bg-mq-red active:border-mq-red select-none">
+        <div className="group flex flex-col items-center py-8 text-sm bg-white border border-gray-300/60 w-64 h-full min-h-[280px] rounded-md cursor-pointer hover:border-mq-red hover:bg-mq-red transition-all duration-200 focus:outline-none focus-visible:outline-none active:bg-mq-red active:border-mq-red select-none">
           <img
             className="w-24 rounded-full"
             src={userImage4.src}
@@ -51,7 +51,7 @@ export default function AboutUs() {
           </p>
         </div>
 
-        <div className="group flex flex-col items-center py-8 text-sm bg-white border border-gray-300/60 w-64 rounded-md cursor-pointer hover:border-mq-red hover:bg-mq-red transition-all duration-200 focus:outline-none focus-visible:outline-none active:bg-mq-red active:border-mq-red select-none">
+        <div className="group flex flex-col items-center py-8 text-sm bg-white border border-gray-300/60 w-64 h-full min-h-[280px] rounded-md cursor-pointer hover:border-mq-red hover:bg-mq-red transition-all duration-200 focus:outline-none focus-visible:outline-none active:bg-mq-red active:border-mq-red select-none">
           <img
             className="w-24 rounded-full"
             src={userImage3.src}
@@ -68,7 +68,7 @@ export default function AboutUs() {
           </p>
         </div>
 
-        <div className="group flex flex-col items-center py-8 text-sm bg-white border border-gray-300/60 w-64 rounded-md cursor-pointer hover:border-mq-red hover:bg-mq-red transition-all duration-200 focus:outline-none focus-visible:outline-none active:bg-mq-red active:border-mq-red select-none">
+        <div className="group flex flex-col items-center py-8 text-sm bg-white border border-gray-300/60 w-64 h-full min-h-[280px] rounded-md cursor-pointer hover:border-mq-red hover:bg-mq-red transition-all duration-200 focus:outline-none focus-visible:outline-none active:bg-mq-red active:border-mq-red select-none">
           <img
             className="w-24 rounded-full"
             src={userImage2.src}
