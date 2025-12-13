@@ -81,7 +81,7 @@ export default function AboutUs() {
             Bachelor of Business Anaylytics
           </p>
           <p className="text-center text-mq-red font-bold group-hover:text-white w-3/4 mt-4">
-            Design and Ethics lead
+            Design and Ethics Lead
           </p>
         </div>
       </div>

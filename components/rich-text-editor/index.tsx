@@ -64,7 +64,7 @@ export default function RichTextEditor({
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
-      const text = editor.getText();
+      const text = editor.getText({ blockSeparator: "\n" });
       const json = editor.getJSON();
 
       onChange?.(html); // html content

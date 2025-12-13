@@ -73,7 +73,7 @@ export function Sidebar() {
       href: "/home/chatbot",
     },
     { icon: HelpCircle, label: "Help", href: "/home/help" },
-    { icon: Save, label: "Your Drafts", href: "/home/log" },
+    { icon: Save, label: "Your Drafts", href: "/home/draft" },
   ];
 
   return (
